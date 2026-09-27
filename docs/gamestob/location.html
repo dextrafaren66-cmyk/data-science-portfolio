@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GameStoB — Location</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .contact-form {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+    }
+
+    .contact-form h3 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 24px;
+      color: var(--brown-light);
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .form-input,
+    .form-textarea {
+      width: 100%;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 15px;
+      padding: 12px 16px;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+      border-color: var(--brown-light);
+      box-shadow: 0 0 0 2px var(--brown-glow);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .social-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 40px;
+    }
+
+    .social-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+
+    .social-card:hover {
+      border-color: var(--border-bright);
+      transform: translateY(-2px);
+      background: var(--bg-card-hover);
+    }
+
+    .social-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .social-name {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .social-handle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .branches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 40px;
+    }
+
+    .branch-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      transition: var(--transition);
+    }
+
+    .branch-card:hover {
+      border-color: var(--border-bright);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .branch-tag {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--brown-mid);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .branch-name {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .branch-info {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .branch-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 1px;
+      margin-top: 12px;
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .branch-status.open {
+      background: rgba(39, 174, 96, 0.15);
+      color: var(--green-accent);
+      border: 1px solid rgba(39, 174, 96, 0.3);
+    }
+
+    .branch-status.soon {
+      background: rgba(200, 149, 108, 0.15);
+      color: var(--brown-light);
+      border: 1px solid var(--border);
+    }
+
+    .branch-status::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="navbar-placeholder"></div>
+
+  <main class="page-wrapper">
+
+    <!-- Page Hero -->
+    <section class="page-hero">
+      <div class="container page-hero-inner">
+        <div class="page-hero-label">// Find Us</div>
+        <h1 class="page-hero-title">Our <span>Location</span></h1>
+        <p class="page-hero-sub">Visit us in store or reach out online — we're always here for you.</p>
+      </div>
+    </section>
+    <br>
+    <!-- Branches -->
+    <section class="section" style="padding-top:0">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Our Branches</h2>
+        </div>
+        <div class="branches-grid">
+          <div class="branch-card">
+            <div class="branch-tag">// Main Store</div>
+            <div class="branch-name">gameStoB Tanjung Duren</div>
+            <div class="branch-info">Flagship three-floor store in Tanjung Duren Mall with esports lounge, demo
+              stations, and same-day pickup for online orders.<br>Open: 10:00 AM — Close: 9:00 PM</div>
+            <span class="branch-status open">Open Now</span>
+          </div>
+          <div class="branch-card">
+            <div class="branch-tag">// Branch 2</div>
+            <div class="branch-name">gameStoB Surabaya</div>
+            <div class="branch-info">West Coast hub featuring the latest console demos, retro gaming section, and weekly
+              community tournaments.<br>Open: 9:00 AM — Close: 10:00 PM</div>
+            <span class="branch-status open">Open Now</span>
+          </div>
+          <div class="branch-card">
+            <div class="branch-tag">// Branch 3</div>
+            <div class="branch-name">gameStoB Jogja</div>
+            <div class="branch-info">full PAL catalog, import titles, and bilingual support staff.<br>Open: 9:30 AM —
+              Close: 8:00 PM</div>
+            <span class="branch-status open">Open Now</span>
+          </div>
+          <div class="branch-card">
+            <div class="branch-tag">// Branch 4</div>
+            <div class="branch-name">gameStoB Makasar</div>
+            <div class="branch-info">Japanese exclusives, limited editions, and developer partner events throughout the
+              year.
+
+              <br>Open: 11:00 AM — Close: 9:00 PM
+
+            </div>
+            <span class="branch-status open">Open Now</span>
+          </div>
+          <div class="branch-card">
+            <div class="branch-tag">// Branch 5</div>
+            <div class="branch-name">gameStoB Bali</div>
+            <div class="branch-info">Indie game focus with weekly developer meetups in our dedicated community space.
+
+              <br>Open: 10:00 AM — Close: 8:00 PM
+
+            </div>
+            <span class="branch-status open">Open Now</span>
+          </div>
+          <div class="branch-card">
+            <div class="branch-tag">// Branch 6</div>
+            <div class="branch-name">gameStoB Lombok
+            </div>
+            <div class="branch-info">VR demo pods and same-day pickup for pre-orders placed before noon local time.
+              <br>Open: 9:00 AM — Close: 7:00 PM
+            </div>
+            <span class="branch-status open">Open Now</span>
+          </div>
+ <div class="branch-card">
+    <div class="branch-tag">// Branch 5</div>
+    <div class="branch-name">gameStoB Senayan</div>
+    <div class="branch-info">
+        Premium gaming destination featuring the latest AAA titles, exclusive collector editions, and monthly esports tournaments.
+        <br>Open: 10:00 AM — Close: 8:00 PM
+    </div>
+    <span class="branch-status open">Open Now</span>
+</div>
+
+<div class="branch-card">
+    <div class="branch-tag">// Branch 6</div>
+    <div class="branch-name">gameStoB Gading Serpong</div>
+    <div class="branch-info">
+        Family-friendly gaming store with interactive demo stations, gaming accessories, and same-day pickup for online orders.
+        <br>Open: 9:00 AM — Close: 7:00 PM
+    </div>
+    <span class="branch-status open">Open Now</span>
+</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="footer-placeholder"></div>
+  <div id="toast-container"></div>
+
+  <script src="js/app.js"></script>
+  <script>
+    injectNavbar('Location');
+    injectFooter();
+
+    function handleContactSubmit() {
+      showToast('✅', 'Message Sent!', 'We\'ll get back to you soon.');
+    }
+
+    // Responsive contact grid
+    function checkGrid() {
+      const grid = document.getElementById('contact-grid');
+      if (grid) {
+        if (window.innerWidth < 768) {
+          grid.style.gridTemplateColumns = '1fr';
+        } else {
+          grid.style.gridTemplateColumns = '1fr 1fr';
+        }
+      }
+    }
+    window.addEventListener('resize', checkGrid);
+    checkGrid();
+  </script>
+
+</body>
+
+</html>

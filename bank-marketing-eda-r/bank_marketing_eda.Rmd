@@ -1,0 +1,438 @@
+---
+title: "Bank Telemarketing Campaign: EDA & Insights"
+author: "Dextra Faren"
+date: "2025-06-21"
+output:
+  html_document:
+    toc: false
+    theme: flatly
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r,echo=FALSE, warning=FALSE, message=FALSE}
+#LIBRARY
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(plotly)
+library(knitr)
+dir.create("images", showWarnings = FALSE)
+```
+  
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+#READ FILE
+df <- read.csv("data/bank_marketing.csv", stringsAsFactors = TRUE)
+
+summary(df)
+str(df)
+```
+
+# {.tabset} 
+
+## 1. Data Quality Assessment and Preprocessing         
+### A. Identify data quality issues    
+#### Inconsistent or unknown categories 
+```{r, echo=FALSE, warning=FALSE,message=FALSE}
+cat_cols<-c("job", "marital", "education", "default", "housing", 
+                      "loan", "contact", "month", "day_of_week", "pdays", 
+                      "previous", "poutcome", "y")
+
+unique_values<-sapply(df[cat_cols], unique)
+unique_values
+
+#CHANGE "unknown" TO N/A
+unknown_cols <- c("job", "marital", "education", "default", "housing","loan")
+
+for (col in unknown_cols) {
+  df[[col]][df[[col]] == "unknown"] = NA
+}
+
+df <- df[!is.na(df$job) & df$job != "", ]
+
+# DELETE "unknown"
+df = droplevels(df)
+
+summary(df)
+```
+
+#### Missing Values
+
+```{r, echo=FALSE, warning=FALSE,message=FALSE}
+colSums(is.na(df)) #CHECK FOR ANY MISSING VALUES
+```
+
+#### Duplicates
+
+```{r, echo=FALSE, warning=FALSE,message=FALSE}
+sum(duplicated(df)) #THERE IS NO DUPLICATED VALUE
+```
+
+#### Outliers and Noisy / Irrelevant Values
+
+**1. Age** 
+```{r, echo=FALSE, warning=FALSE,message=FALSE,fig.width=5, fig.height=7}
+bp1 = boxplot(df$age, main = "Age", col = "skyblue")
+outlier = bp1$out
+
+cat("Outlier value in 'Age':\n")
+print(outlier)
+```
+
+**2. Duration**      
+```{r, echo=FALSE, warning=FALSE, message=FALSE,fig.width=5, fig.height=7}
+bp2 = boxplot(df$duration, main = "Duration", col = "skyblue")
+outlier2 = bp2$out
+
+cat("Outlier value in 'Duration':\n")
+print(outlier2)
+```
+
+**3. Campaign**       
+```{r, echo=FALSE, warning=FALSE, message=FALSE,fig.width=5, fig.height=7}
+bp3 = boxplot(df$campaign, main = "Campaign", col = "skyblue")
+outlier3 = bp3$out
+
+cat("Outlier value in 'Campaign':\n")
+print(outlier3)
+```
+
+**4. P Days** 
+```{r, echo=FALSE, warning=FALSE, message=FALSE,fig.width=5, fig.height=7}
+bp4 = boxplot(df$pdays, main = "P days", col = "skyblue")
+outlier4 = bp4$out
+
+cat("Outlier value in 'P Days':\n")
+print(outlier4)
+```
+
+### B. Handle the issues
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+#DATA HANDLING
+cleaned_data <- df %>%
+  filter(job != "" & duration < 2500)%>%
+  drop_na()%>%
+  mutate(
+    #PDAYS: 999 means "never contacted before". Keep the day count separately for feature engineering.
+    days_since_last_contact = if_else(pdays == 999, NA_real_, as.numeric(pdays)),
+    pdays = if_else(pdays == 999, "Not Contacted", "Previously Contacted"),
+    pdays = as.factor(pdays),
+    #EDUCATION
+    education = as.character(education),
+    education = ifelse(education %in% c("basic.4y", "basic.6y", "basic.9y", "illiterate"), "basic", education),
+    education = as.factor(education))
+    
+    #RENAMING COLUMN NAMES TO IMPROVE CLARITY
+    cleaned_data <- cleaned_data %>%
+    rename(
+    subscribed = y,
+    education_level = education,
+    last_contacted_days_ago = pdays,
+    past_contacts_count = previous,
+    call_duration = duration)
+  
+cleaned_data$X <- NULL #This column is just a row index from the file and provides no useful information for analysis, so I removed it
+
+cleaned_data <- droplevels(cleaned_data)
+
+summary(cleaned_data)
+
+```
+### C. Summary statistics and initial exploration    
+#### Central tendency and variability for numerical column
+```{r, echo=FALSE,warning=FALSE,message=FALSE}
+num_cols <- cleaned_data %>% select_if(is.numeric)
+print(summary(num_cols))
+```
+
+#### A summary table to explore one variable across categories  
+**Subscription Rate by Education Level**     
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+subscription_by_education <- cleaned_data%>%
+  group_by(education_level)%>%
+  summarise(count = n(),
+    subscribe_rate = round(mean(subscribed == "yes") * 100, 2))
+
+kable(subscription_by_education, caption = "Subscription Rate by Education Level (%)")
+```
+
+**Subscription Rate by Contact History**     
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+subscription_by_contacted <- cleaned_data%>%
+  group_by(last_contacted_days_ago)%>%
+  summarise(count = n(),
+    subscription_rate = round(mean(subscribed == "yes") * 100, 2))
+
+kable(subscription_by_contacted, caption = "Subscription Rate by Contact History (%)")
+```
+
+**Subscription Rate by Job Type**     
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+subscription_by_job <- cleaned_data %>%
+  group_by(job) %>%
+  summarise(count = n(),
+    subscription_rate = round(mean(subscribed == "yes") * 100, 2))
+
+kable(subscription_by_job, caption = "Subscription Rate by Job Type (%)")
+```
+
+**Subscription Rate by Marital Status**  
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+subscription_by_marital <- cleaned_data %>%
+  group_by(marital) %>%
+  summarise(count = n(),
+    subscription_rate = round(mean(subscribed == "yes") * 100, 2))
+
+kable(subscription_by_marital, caption = "Subscription Rate by Marital Status (%)")
+```
+
+## 2. Relationship Analysis          
+### A. Explore variable relationships     
+#### Three variables that might influence the campaign outcome    
+**1.Campaign (Number of Contacts During The Campaign) **  
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+cor.test(cleaned_data$campaign, ifelse(cleaned_data$subscribed == "yes", 1, 0))
+```
+
+**Interpretation :** 
+The correlation between the number of contact attempts during the campaign and subscription outcome is **very weakly negative** (r = -0.067) and statistically significant (p < 0.001). This suggests that clients who were contacted more frequently may have been marginally less likely to subscribe.
+
+**2. Previously Contacted**  
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+cor.test(cleaned_data$past_contacts_count, ifelse(cleaned_data$subscribed == "yes", 1, 0))
+```
+
+**Interpretation :** 
+The correlation between the number of past contacts and subscription outcome is **weakly positive** (r = 0.223) and statistically significant (p < 0.001). This suggests that clients with more prior contact were somewhat more likely to subscribe, although the correlation is relatively modest.
+
+**3. Job**  
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+table(cleaned_data$job, cleaned_data$subscribed)
+
+chisq.test(table(cleaned_data$job, cleaned_data$subscribed))
+
+job_table = cleaned_data %>%
+  group_by(job) %>%
+  summarise(
+    yes = sum(subscribed == "yes"),
+    no = sum(subscribed == "no"),
+    total = n(),
+    percent = round(100 * yes / total, 1)
+  )
+
+kable(job_table, caption = "Subscription by Job Type")
+```
+
+**Interpretation :** 
+The highest proportion of subscriptions came from student clients (33.1%), followed by retired individuals(31.6%), while the lowest came from those in blue-collar jobs (8.9%). This suggests that job type may influence clients’ interest or their ability to subscribe. 
+
+### B. Feature engineering    
+#### Create 3 new variables     
+**1. Age Group**   
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+  cleaned_data$age_group = cut(
+  cleaned_data$age,
+  breaks = c(-Inf, 30, 50, Inf),
+  labels = c("Under 30", "30-50", "Over 50")
+)
+
+#Dropped age after transforming it into a new "age_group" variable
+cleaned_data$age = NULL
+
+summary(cleaned_data)
+```
+
+**2. Recency Level**   
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+  cleaned_data$recency_level = case_when(
+  is.na(cleaned_data$days_since_last_contact) ~ "Never Contacted",
+  cleaned_data$days_since_last_contact <= 7   ~ "Contacted Within a Week",
+  TRUE                                        ~ "Contacted Over a Week Ago"
+)
+
+cleaned_data$recency_level = as.factor(cleaned_data$recency_level)
+
+#Dropped the raw day count after transforming it into the categorical "recency_level" variable
+cleaned_data$days_since_last_contact = NULL
+
+table(cleaned_data$recency_level, cleaned_data$subscribed)
+```
+
+**Interpretation:**
+Previous contact is one of the strongest signals in the data. Clients who were never contacted before subscribe at about **11%**. Clients contacted in a previous campaign subscribe at roughly **65–70%**, whether the contact was within the last week or longer ago. Follow-ups with warm leads are far more productive than cold calls.
+
+**3. Total Contact Attempts**    
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
+cleaned_data$total_contact_attempts <- cleaned_data$campaign + cleaned_data$past_contacts_count
+
+summary(cleaned_data)
+```
+### C. Interactive visualizations of relationships
+**Comparing two categorical variables (Education vs Subscribed)**
+```{r, echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.height=7}
+plot_ly(
+  data = cleaned_data %>% count(education_level, subscribed),
+  x = ~education_level,
+  y = ~n,
+  color = ~subscribed,
+  colors = c("yes" = "royalblue", "no" = "red"), 
+  type = "bar",
+  text = ~paste("Count:", n),
+  hoverinfo = "text",
+  barmode = "stack"
+) %>%
+  layout(
+    title = "Subscription Count Based on Education Level",
+    xaxis = list(title = "Education Level"),
+    yaxis = list(title = "Number of Clients"),
+    legend = list(title = list(text = "Subscribed"))
+  )
+```
+
+**Interpretation :** 
+Based on the bar chart that breaks down subscription status by education level, we can observe several key trends. University graduates are the biggest group, and they also subscribe the most. Clients with basic or high school educations are also a big part of the client base, but they exhibit lower subscription rates when compared to those with higher education levels. On the other hand, clients enrolled in professional courses represent the smallest group and don't subscribe much either.This pattern suggests a positive correlation between education level and the likelihood of subscribing to the offered campaign. But, it's worth pointing out that the majority of clients, regardless of their education, still didn't subscribe, highlighting a general trend of low campaign conversion.
+
+**Comparing one numeric and one categorical (Age Group vs Subscription Status)**
+```{r, echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.height=7}
+plot_ly(
+  data = cleaned_data %>% count(age_group, subscribed),
+  x = ~age_group,
+  y = ~n,
+  color = ~subscribed,
+  colors = c("yes" = "royalblue", "no" = "red"),
+  type = "bar",
+  text = ~paste("Count:", n),
+  hoverinfo = "text",
+  barmode = "stack"
+) %>%
+  layout(
+    title = "Subscription Status Based on Age Group",
+    xaxis = list(title = "Age Group"),
+    yaxis = list(title = "Number of Clients"),
+    legend = list(title = list(text = "Subscribed"))
+  )
+```
+
+**Interpretation:** 
+Looking at the bar chart that shows how subscription status varies with age, we can see a few interesting things. The 30-50 age group makes up most of the client base, but again they also happen to be the biggest group of non-subscribers. The "Under 30" and "Over 50" groups are smaller overall, but they seem to subscribe more often than the middle aged group. This suggests that younger and older more senior clients are most likely to subscribe to the campaign than those aged 30–50 years.
+
+**Multi-dimensional chart (Education vs Subscription Rate [Faceted by Age Group])**
+```{r,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.height=7}
+#CALCULATE THE SUBSCRIPTION RATE BASED ON EDUCATION AND AGE GROUP
+subs_summary <- cleaned_data %>%
+  group_by(age_group, education_level) %>%
+  summarise(
+    count = n(),
+    subscribed_count = sum(subscribed == "yes"),
+    rate = 100 * subscribed_count / count,
+    .groups = "drop"
+  )
+
+#BARCHART
+ggplot(subs_summary, aes(x = education_level, y = rate, fill = education_level)) +
+  geom_bar(stat = "identity", width = 0.85) +
+  facet_wrap(~ age_group) +
+  labs(
+    title = "Subscription Rates by Education Level, 
+        faceted by Age Group",
+    x = "Education",
+    y = "Subscription Rate (%)"
+  ) +
+  scale_fill_viridis_d(option = "plasma")+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+```
+
+**Interpretation: ** 
+People with more education, especially those with university degrees or professional training, are more likely to subscribe. Older individuals have the highest subscription rates, no matter their education, which means they're really into the campaign, especially if they're well-educated. Younger people with at least a high school or university education also display a comparatively positive response. However, middle-aged people don't subscribe as much. These insights suggest that we should focus our marketing efforts on older, educated people and younger adults who have graduated high school or gone to university.
+
+## 3. Insight Storytelling and Recommendations       
+### A. Data storytelling through visual design
+**1. Analysis of Subscription Rates by Education Level Across Different Age Groups** 
+```{r,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.height=7}
+#CALCULATE THE SUBSCRIPTION RATE BASED ON EDUCATION AND AGE GROUP
+subs_summary <- cleaned_data %>%
+  group_by(age_group, education_level) %>%
+  summarise(
+    count = n(),
+    subscribed_count = sum(subscribed == "yes"),
+    rate = 100 * subscribed_count / count,
+    .groups = "drop"
+  )
+
+#BARCHART
+ggplot(subs_summary, aes(x = education_level, y = rate, fill = education_level)) +
+  geom_bar(stat = "identity", width = 0.85) +
+  facet_wrap(~ age_group) +
+  labs(title = "Subscription Rates by Education Level, 
+        faceted by Age Group",
+       x = "Education",
+       y = "Subscription Rate (%)") +
+  scale_fill_viridis_d(option = "plasma")+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+ggsave("images/subscription_by_education_age.png", width = 8, height = 5, dpi = 150, bg = "white")
+```
+
+**2. Call Duration's Impact on Subscription Success**
+```{r, echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.height=7}
+#CALCULATE THE AVERAGE CALL DURATION BY SUBSCRIPTION STATUS
+duration_summary <- cleaned_data %>%
+  group_by(subscribed) %>%
+  summarise(
+    avg_calldur = mean(call_duration, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+#BAR CHART
+plot_ly(
+  data = duration_summary,
+  x = ~subscribed,
+  y = ~avg_calldur,
+  type = "bar",
+  marker = list(color = c("red", "darkgreen")),  
+  text = ~paste(round(avg_calldur, 1), " sec"),
+  hoverinfo = "text") %>%
+  layout(
+    title = list(text ="The Impact of 
+    Conversation Length on Subscription Outcome"),
+    xaxis = list(title = "Subscription Outcome"),
+    yaxis = list(title = "Average Call Duration (seconds)"),
+    showlegend = FALSE
+  )
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+p_dur <- ggplot(duration_summary, aes(subscribed, avg_calldur, fill = subscribed)) +
+  geom_col(width = 0.6) +
+  geom_text(aes(label = paste(round(avg_calldur), "s")), vjust = -0.4) +
+  scale_fill_manual(values = c(no = "firebrick", yes = "darkgreen")) +
+  labs(title = "Average call duration by outcome", x = "Subscribed", y = "Seconds") +
+  theme_minimal() + theme(legend.position = "none")
+ggsave("images/call_duration.png", p_dur, width = 5, height = 4, dpi = 150, bg = "white")
+```
+
+### B. Interpret
+**1. Analysis of Subscription Rates by Education Level Across Different Age Groups** 
+**Interpretation: **
+People with more education, especially those with university degrees or professional training, are more likely to subscribe. Older individuals have the highest subscription rates, no matter their education, which means they're really into the campaign, especially if they're well-educated. Younger people with at least a high school or university education also display a comparatively positive response. However, middle-aged people don't subscribe as much. These insights suggest that we should focus our marketing efforts on older, educated people and younger adults who have graduated high school or gone to university.
+
+**2. Call Duration's Impact on Subscription Success**
+**Interpretation: **
+The data reveals that clients who subscribed spent an average of 517.8 seconds on calls, which is almost twice as much as the 220.2 seconds for those who didn't. So, it seems like there's a link between longer chats and a better chance of someone subscribing, implying that potential subscribers just need more time and interaction. However it's important to remember that this observation is just a correlation, not proof that longer calls cause subscriptions. Other factors, such as the quality of the interaction or the offer presented to the client, might also play a significant role in influencing subscriptions.
+
+
+### C. Business Recommendations 
+1. Recommendations Based on Audience Analysis
+The analysis shows that certain demographic groups respond much better than others. Therefore, the marketing strategy should shift from a broad, general approach to a more focused one.
+- Implement a Targeted Marketing System:
+    + Persona A: The Experienced Professional/Retiree: 
+      Focus on engaging older, well-educated individuals. The key message for this demographic should highlight lasting value, security, and quality. 
+    + Persona B: The Ambitious Young Adult
+      Focus on attracting individuals under 30 who have a university or at least finished high school education. The message should emphasize opportunities for advancement and a wide range of benefits.        Utilize digital and social media platforms, since they tend to attract a younger crowd.
+- Conduct Research on Underperforming Segments: 
+  Instead of ignoring the middle-aged (30-50) , conducting surveys may be a good idea to determine whether product is not relevant to them, if the messaging is wrong, or if competitors are better meeting   their needs.
+
+2. Recommendations Based on Call Duration Analysis
+  The key insight is that longer, more interactive conversations are linked to successful outcomes. The goal is to not simply just make longer calls, but to improve the quality of the interaction, which   naturally leads to more productive conversations. In conclusion, to boost sales, the company needs to change its approach by emphasizing valuable customer interactions. This involves better training     for sales agents, focusing on the importance of quality over the number of calls made.

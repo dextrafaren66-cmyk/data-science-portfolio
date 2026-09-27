@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GameStoB — Home</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <div id="navbar-placeholder"></div>
+
+  <main class="page-wrapper">
+
+    <!-- ══ HERO CAROUSEL ══ -->
+    <section class="carousel" id="hero-carousel">
+      <div class="carousel-track" id="carousel-track">
+        <!-- Slides injected by JS -->
+      </div>
+      <button class="carousel-btn prev" id="carousel-prev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+      <button class="carousel-btn next" id="carousel-next">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
+      <div class="carousel-dots" id="carousel-dots"></div>
+    </section>
+
+    <!-- ══ FEATURED GAMES ══ -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Featured Games</h2>
+          <a href="catalog.html" class="section-link">
+            View All
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </a>
+        </div>
+        <div class="games-grid" id="featured-games"></div>
+      </div>
+    </section>
+
+    <!-- ══ PROMO BANNER ══ -->
+    <section class="section" style="padding-top:0">
+      <div class="container">
+        <div class="promo-banner">
+          <div class="promo-text">
+            <div class="promo-label">🔥 Limited Time Offer</div>
+            <h2 class="promo-heading">Get Up to <em>40% Off</em><br>On Selected Titles</h2>
+            <p class="promo-sub">Shop now and save big on our curated sale collection.</p>
+          </div>
+          <div class="promo-cta">
+            <a href="catalog.html" class="btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <polyline points="13 17 18 12 13 7" />
+                <polyline points="6 17 11 12 6 7" />
+              </svg>
+              Shop Sale
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ NEW RELEASES ══ -->
+    <section class="section" style="padding-top:0">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">New Releases</h2>
+          <a href="catalog.html" class="section-link">
+            View All
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </a>
+        </div>
+        <div class="games-grid" id="new-games"></div>
+      </div>
+    </section>
+
+    <!-- ══ DLC SECTION ══ -->
+    <section class="section" style="padding-top:0">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">DLC & Add-ons</h2>
+          <a href="catalog.html" class="section-link">
+            View All
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </a>
+        </div>
+        <div class="games-grid" id="dlc-home"></div>
+      </div>
+    </section>
+
+    <!-- ══ SECOND PROMO BANNER ══ -->
+    <section class="section" style="padding-top:0">
+      <div class="container">
+        <div class="promo-banner" style="background: linear-gradient(135deg,#0a1018 0%,#060810 100%);">
+          <div class="promo-text" style="position:relative;z-index:1">
+            <div class="promo-label">🎮 Join Our Community</div>
+            <h2 class="promo-heading">Follow Us on<br><em>Shopee</em></h2>
+            <p class="promo-sub">Get exclusive deals, early access, and flash sales every week.</p>
+          </div>
+          <div class="promo-cta" style="position:relative;z-index:1">
+            <a href="https://shopee.co.id/" target="_blank" rel="noopener" class="btn-primary">
+              Visit Shopee Store
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="footer-placeholder"></div>
+  <div id="toast-container"></div>
+
+  <script src="js/app.js"></script>
+  <script>
+    // Carousel data
+    const CAROUSEL_SLIDES = [
+      {
+        image: 'img/re1.jpg',
+        tag: '🔥 Hot New Release',
+        title: 'Resident Evil\nRequiem',
+        desc: 'The next chapter in survival horror. Face unimaginable terror in this chilling new entry.',
+
+        price: 'Rp 849.000',
+        origPrice: 'Rp 999.000',
+        gameId: 1,
+      },
+      {
+        image: 'img/cy1.jpg',
+        tag: '⚡ Best Seller',
+        title: 'Cyberpunk\n2077',
+        desc: 'Night City awaits. Fully optimized next-gen experience with Phantom Liberty expansion.',
+        price: 'Rp 499.000',
+        origPrice: 'Rp 799.000',
+        gameId: 19,
+      },
+      {
+        image: 'img/el1.webp',
+        tag: '🗡️ Epic RPG',
+        title: 'Elden Ring',
+        desc: 'Forge your legend in the Lands Between. Now with Shadow of the Erdtree expansion.',
+        price: 'Rp 699.000',
+        origPrice: 'Rp 849.000',
+        gameId: 4,
+      },
+      {
+        image: 'img/mh.jpg',
+        tag: '🏹 Action RPG',
+        title: 'Monster Hunter\nWilds',
+        desc: 'Hunt. Craft. Survive. The wildest Monster Hunter experience ever created.',
+        price: 'Rp 899.000',
+        origPrice: null,
+        gameId: 3,
+      },
+      {
+        image: 'img/db.jpg',
+        tag: '😈 Dark Fantasy',
+        title: 'Diablo IV',
+        desc: 'Descend into darkness. Vessel of Hatred expansion now available.',
+        price: 'Rp 749.000',
+        origPrice: 'Rp 899.000',
+        gameId: 13,
+      }
+    ];
+
+    // Build carousel
+    const track = document.getElementById('carousel-track');
+    const dotsEl = document.getElementById('carousel-dots');
+    let current = 0, autoTimer;
+
+    CAROUSEL_SLIDES.forEach((s, i) => {
+      const titleLines = s.title.replace('\n', '<br>');
+      const origHtml = s.origPrice ? `<span class="original">${s.origPrice}</span>` : '';
+      const slide = document.createElement('div');
+      slide.className = 'carousel-slide';
+      slide.innerHTML = `
+    <div class="carousel-slide-bg"
+       style="
+          background-image:
+          linear-gradient(rgba(0,0,0,.7), rgba(0,0,0,.4)),
+          url('${s.image}');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+       ">
+  </div>
+    <div class="carousel-slide-overlay"></div>
+    <div class="carousel-content">
+      <span class="carousel-tag">${s.tag}</span>
+      <h1 class="carousel-title">${titleLines}</h1>
+      <p class="carousel-desc">${s.desc}</p>
+      <div class="carousel-price">${origHtml}${s.price}</div>
+      <div class="carousel-actions">
+        <a href="purchase.html" target="_blank" rel="noopener" class="btn-primary">Buy Now</a>
+        <button class="btn-secondary" onclick="addToCart(${s.gameId})">Add to Cart</button>
+      </div>
+    </div>`;
+      track.appendChild(slide);
+
+      const dot = document.createElement('button');
+      dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+      dot.addEventListener('click', () => goTo(i));
+      dotsEl.appendChild(dot);
+    });
+
+    function goTo(n) {
+      current = (n + CAROUSEL_SLIDES.length) % CAROUSEL_SLIDES.length;
+      track.style.transform = `translateX(-${current * 100}%)`;
+      document.querySelectorAll('.carousel-dot').forEach((d, i) =>
+        d.classList.toggle('active', i === current));
+    }
+
+    document.getElementById('carousel-prev').addEventListener('click', () => { goTo(current - 1); resetAuto(); });
+    document.getElementById('carousel-next').addEventListener('click', () => { goTo(current + 1); resetAuto(); });
+
+    function resetAuto() { clearInterval(autoTimer); autoTimer = setInterval(() => goTo(current + 1), 5000); }
+    resetAuto();
+
+    // Inject navbar & footer
+    injectNavbar('Home');
+    injectFooter();
+
+    // Featured games (first 8 games)
+    const featuredGrid = document.getElementById('featured-games');
+    GAMES.slice(0, 8).forEach(g => {
+      featuredGrid.insertAdjacentHTML('beforeend', buildCard(g));
+    });
+
+    // New releases (badge = 'New')
+    const newGrid = document.getElementById('new-games');
+    GAMES.filter(g => g.badge === 'New').slice(0, 6).forEach(g => {
+      newGrid.insertAdjacentHTML('beforeend', buildCard(g));
+    });
+
+    // DLC home (first 6)
+    const dlcGrid = document.getElementById('dlc-home');
+    DLCS.slice(0, 6).forEach(g => {
+      dlcGrid.insertAdjacentHTML('beforeend', buildCard(g));
+    });
+  </script>
+
+</body>
+
+</html>

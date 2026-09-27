@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GameStoB — Catalog</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="navbar-placeholder"></div>
+
+<main class="page-wrapper">
+
+  <!-- Page Hero -->
+  <section class="page-hero">
+    <div class="container page-hero-inner">
+      <div class="page-hero-label">// Browse Collection</div>
+      <h1 class="page-hero-title">Game <span>Catalog</span></h1>
+      <p class="page-hero-sub">Explore our full collection of games and DLC add-ons.</p>
+    </div>
+  </section>
+
+  <!-- Main Catalog -->
+  <section class="section">
+    <div class="container">
+
+      <!-- Filter Bar -->
+      <div class="filter-bar" id="filter-bar">
+        <span class="filter-label">Sort:</span>
+        <select class="filter-select" id="sort-select">
+          <option value="default">Default</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+        </select>
+        <div class="filter-divider"></div>
+        <span class="filter-label">Genre:</span>
+        <select class="filter-select" id="genre-select">
+          <option value="all">All Genres</option>
+        </select>
+        <div class="filter-divider"></div>
+        <span class="filter-label">Platform:</span>
+        <select class="filter-select" id="platform-select">
+          <option value="all">All Platforms</option>
+          <option value="PC">PC</option>
+          <option value="PS5">PS5</option>
+          <option value="Xbox">Xbox</option>
+        </select>
+        <div class="filter-divider"></div>
+        <span class="filter-label">Type:</span>
+        <select class="filter-select" id="type-select">
+          <option value="all">All Types</option>
+          <option value="game">Games Only</option>
+          <option value="dlc">DLC Only</option>
+        </select>
+        <span class="filter-count" id="filter-count">0 items</span>
+      </div>
+
+      <!-- Games Section -->
+      <div class="section-header">
+        <h2 class="section-title" id="games-heading">Games</h2>
+      </div>
+      <div class="games-grid" id="catalog-games"></div>
+
+      <!-- DLC Section -->
+      <div class="section-header" style="margin-top: 60px;" id="dlc-header">
+        <h2 class="section-title">DLC &amp; Add-ons</h2>
+      </div>
+      <div class="games-grid" id="catalog-dlc"></div>
+
+      <!-- No results -->
+      <div id="no-results" style="display:none; text-align:center; padding:80px 24px; color:var(--text-muted);">
+        <div style="font-size:48px; margin-bottom:16px;">🎮</div>
+        <h3 style="font-family:var(--font-display);font-size:28px;font-weight:700;text-transform:uppercase;margin-bottom:8px;">No results found</h3>
+        <p>Try adjusting your filters.</p>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<div id="footer-placeholder"></div>
+<div id="toast-container"></div>
+
+<script src="js/app.js"></script>
+<script>
+injectNavbar('Catalog');
+injectFooter();
+
+// Populate genre filter
+const genreSet = new Set();
+ALL_ITEMS.forEach(i => i.genre.split(' / ').forEach(g => genreSet.add(g.trim())));
+const genreSelect = document.getElementById('genre-select');
+[...genreSet].sort().forEach(g => {
+  const opt = document.createElement('option');
+  opt.value = g; opt.textContent = g;
+  genreSelect.appendChild(opt);
+});
+
+function renderCatalog() {
+  const sort = document.getElementById('sort-select').value;
+  const genre = document.getElementById('genre-select').value;
+  const platform = document.getElementById('platform-select').value;
+  const type = document.getElementById('type-select').value;
+
+  let items = [...ALL_ITEMS];
+
+  if (genre !== 'all') items = items.filter(i => i.genre.includes(genre));
+  if (platform !== 'all') items = items.filter(i => i.platform.includes(platform));
+  if (type !== 'all') items = items.filter(i => i.type === type);
+
+  if (sort === 'price-asc') items.sort((a, b) => a.price - b.price);
+  else if (sort === 'price-desc') items.sort((a, b) => b.price - a.price);
+
+  const games = items.filter(i => i.type === 'game');
+  const dlcs = items.filter(i => i.type === 'dlc');
+
+  const gamesGrid = document.getElementById('catalog-games');
+  const dlcGrid = document.getElementById('catalog-dlc');
+  gamesGrid.innerHTML = '';
+  dlcGrid.innerHTML = '';
+
+  games.forEach(g => gamesGrid.insertAdjacentHTML('beforeend', buildCard(g)));
+  dlcs.forEach(g => dlcGrid.insertAdjacentHTML('beforeend', buildCard(g)));
+
+  const total = games.length + dlcs.length;
+  document.getElementById('filter-count').textContent = `${total} item${total !== 1 ? 's' : ''}`;
+  document.getElementById('no-results').style.display = total === 0 ? 'block' : 'none';
+  document.getElementById('dlc-header').style.display = dlcs.length === 0 ? 'none' : '';
+  document.getElementById('games-heading').textContent = games.length === 0 ? 'Games' : `Games (${games.length})`;
+}
+
+['sort-select','genre-select','platform-select','type-select'].forEach(id => {
+  document.getElementById(id).addEventListener('change', renderCatalog);
+});
+
+renderCatalog();
+</script>
+
+</body>
+</html>

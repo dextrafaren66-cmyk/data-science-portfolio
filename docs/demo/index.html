@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vehicle Detection Demo | Dextra Faren</title>
+  <meta name="description" content="Live YOLOv8 demo that detects Indonesian vehicles and license plates, running entirely in your browser.">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body>
+  <header class="demo-bar">
+    <div class="container demo-bar-inner">
+      <a class="brand" href="../index.html#projects"><span class="brand-dot" aria-hidden="true"></span>Dextra Faren<span class="brand-role">/ Live demo</span></a>
+      <a class="back-link" href="../index.html#project=vehicle-detection-yolov8">Back to the project</a>
+    </div>
+  </header>
+
+  <main class="container demo-main">
+    <header class="demo-head">
+      <p class="eyebrow">Computer Vision · Live demo</p>
+      <h1 class="section-title">Vehicle &amp; License Plate Detection.</h1>
+      <p class="muted demo-intro">
+        My YOLOv8s model, fine-tuned on Indonesian street scenes, running <strong>entirely in your browser</strong>.
+        Nothing you upload leaves your device. The model (about 45 MB) downloads once, the first time you run it.
+      </p>
+    </header>
+
+    <div class="demo-grid">
+      <section class="card stage-card" aria-label="Image and detections">
+        <div class="stage" id="stage">
+          <canvas id="canvas" role="img" aria-label="Selected image with detection boxes"></canvas>
+          <div class="stage-overlay" id="overlay" hidden>
+            <div class="spinner" aria-hidden="true"></div>
+            <p id="overlay-text">Loading model…</p>
+            <div class="progress" id="progress" hidden><span id="progress-bar"></span></div>
+          </div>
+          <p class="drop-hint" id="drop-hint">Drop a street photo here</p>
+        </div>
+        <p class="stage-meta" id="stage-meta" aria-live="polite"></p>
+      </section>
+
+      <aside class="controls" aria-label="Controls">
+        <div class="card control-card">
+          <p class="label">1. Pick a photo</p>
+          <div class="examples" id="examples"></div>
+          <label class="btn btn-secondary btn-block upload-btn">
+            <input type="file" id="file" accept="image/*" class="visually-hidden">
+            <span>Upload your own</span>
+          </label>
+
+          <p class="label conf-label"><label for="conf">2. Confidence threshold</label> <span class="mono-meta" id="conf-value">0.25</span></p>
+          <input type="range" id="conf" min="0.05" max="0.9" step="0.05" value="0.25">
+          <p class="hint">Lower it to see more boxes, including the ones the model is unsure about.</p>
+
+          <button class="btn btn-primary btn-block" id="run" type="button">Run detection</button>
+        </div>
+
+        <div class="card control-card">
+          <p class="label">What it found</p>
+          <table class="found" id="found">
+            <thead><tr><th scope="col">Label</th><th scope="col">Meaning</th><th scope="col" class="num">Count</th></tr></thead>
+            <tbody><tr><td colspan="3" class="empty">Run detection to see results.</td></tr></tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+
+    <section class="demo-notes">
+      <div class="note">
+        <p class="note-label">How it works</p>
+        <p>The trained weights were exported to <strong>ONNX</strong> and run with ONNX Runtime Web (WebAssembly). The page letterboxes your photo to 640×640, runs the model, and applies non-max suppression in JavaScript, the same steps Ultralytics does in Python. Why in the browser? Because it's free to host, never sleeps, and keeps your photos private.</p>
+      </div>
+      <div class="note">
+        <p class="note-label">Good to know</p>
+        <p>Test-set mAP50 is 0.81. Cars and motorbikes are close to perfect; license plates are the hardest class, so expect some missed plates on busy or distant scenes. The example photos come from the test split of the <a href="https://universe.roboflow.com/irfan-maulana/deteksi-kendaraan/dataset/5" target="_blank" rel="noopener">Deteksi Kendaraan</a> dataset (CC BY 4.0).</p>
+      </div>
+    </section>
+  </main>
+
+  <noscript><p class="container">This demo needs JavaScript.</p></noscript>
+  <script src="vendor/ort.wasm.min.js"></script>
+  <script src="demo.js"></script>
+</body>
+</html>

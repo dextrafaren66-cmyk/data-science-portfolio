@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GameStoB — Purchase</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    :root {
+      --red-accent: #c8956c;
+      --red-glow: rgba(230, 57, 70, 0.25);
+      --red-dark: #b52532;
+      --bg-dark: #0f0f0f;
+      --bg-card: #161616;
+      --bg-input: #1c1c1c;
+      --border: rgba(255,255,255,0.07);
+      --border-focus: rgba(230, 57, 70, 0.6);
+      --text-primary: #f0f0f0;
+      --text-muted: #a0a0a0;
+      --text-dim: #5a5a5a;
+      --green-accent: #2dff7f;
+      --brown-light: #d4a96a;
+      --font-display: 'Rajdhani', 'Barlow Condensed', sans-serif;
+      --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+    }
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg-dark); color: var(--text-primary); font-family: 'Inter', sans-serif; min-height: 100vh; }
+    .page-wrapper { min-height: calc(100vh - 140px); }
+
+    /* Hero */
+    .page-hero { padding: 60px 0 40px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(230,57,70,0.05) 0%, transparent 100%); }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .page-hero-inner { display: flex; flex-direction: column; gap: 8px; }
+    .page-hero-label { font-family: var(--font-mono); font-size: 12px; color: var(--red-accent); letter-spacing: 3px; text-transform: uppercase; }
+    .page-hero-title { font-family: var(--font-display); font-size: clamp(36px, 6vw, 56px); font-weight: 700; letter-spacing: 3px; text-transform: uppercase; line-height: 1; }
+    .page-hero-title span { color: var(--red-accent); }
+    .page-hero-sub { font-size: 14px; color: var(--text-muted); margin-top: 4px; font-family: var(--font-mono); }
+    .section { padding: 48px 0 80px; }
+
+    /* Main layout: left (cart+payment) | right (summary) */
+    .purchase-layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 32px;
+      align-items: start;
+    }
+    @media (max-width: 900px) { .purchase-layout { grid-template-columns: 1fr; } }
+
+    /* ── Cart Items ── */
+    .cart-items-list { display: flex; flex-direction: column; gap: 12px; }
+    .cart-item { display: flex; align-items: center; gap: 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; transition: border-color 0.2s; }
+    .cart-item:hover { border-color: rgba(230,57,70,0.3); }
+    .cart-item-img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; }
+    .cart-item-info { flex: 1; min-width: 0; }
+    .cart-item-type { font-size: 11px; color: var(--text-dim); font-family: var(--font-mono); letter-spacing: 1px; margin-bottom: 4px; }
+    .cart-item-name { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cart-item-platform { font-size: 12px; color: var(--text-muted); }
+    .cart-item-price { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--brown-light); white-space: nowrap; }
+    .cart-item-remove { background: none; border: 1px solid transparent; border-radius: 6px; color: var(--text-dim); cursor: pointer; padding: 8px; display: flex; align-items: center; transition: all 0.2s; }
+    .cart-item-remove:hover { color: var(--red-accent); border-color: var(--red-accent); background: var(--red-glow); }
+
+    /* Quantity controls */
+    .qty-control { display: flex; align-items: center; gap: 8px; margin-right: 12px; }
+    .qty-btn { width: 28px; height: 28px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 5px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; line-height: 1; transition: all 0.2s; flex-shrink: 0; }
+    .qty-btn:hover { border-color: var(--red-accent); color: var(--red-accent); background: var(--red-glow); }
+    .qty-value { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--text-primary); min-width: 20px; text-align: center; }
+    .cart-item-price-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+    .cart-item-price-unit { font-size: 11px; color: var(--text-dim); font-family: var(--font-mono); }
+
+    .btn-primary, .btn-secondary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; border: none; font-family: var(--font-display); letter-spacing: 1px; text-transform: uppercase; }
+    .btn-primary { background: var(--red-accent); color: #fff; }
+    .btn-primary:hover { background: var(--red-dark); }
+    .btn-secondary { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--text-muted); color: var(--text-primary); }
+
+    /* Cart empty notice (inline, compact) */
+    .cart-empty-notice {
+      display: flex; align-items: center; gap: 14px;
+      padding: 18px 20px;
+      background: var(--bg-card);
+      border: 1px dashed rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: var(--text-dim);
+      font-size: 13px;
+      font-family: var(--font-mono);
+      letter-spacing: 1px;
+    }
+    .cart-empty-notice .ei { font-size: 24px; }
+
+    /* ── Order Summary sidebar ── */
+    .cart-summary { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 24px; position: sticky; top: 80px; }
+    .cart-summary h3 { font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .summary-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; color: var(--text-muted); }
+    .summary-row.total { font-size: 18px; font-weight: 700; color: var(--text-primary); border-top: 1px solid var(--border); margin-top: 8px; padding-top: 16px; font-family: var(--font-display); letter-spacing: 1px; }
+    .secure-note { text-align: center; font-size: 11px; color: var(--text-dim); margin-top: 10px; font-family: var(--font-mono); }
+
+    /* ═══════════════════════════
+       PAYMENT FORM
+    ═══════════════════════════ */
+    .payment-section { margin-top: 40px; padding-top: 40px; border-top: 1px solid var(--border); }
+    .payment-section-title {
+      font-family: var(--font-display); font-size: 20px; font-weight: 700;
+      letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: 24px; display: flex; align-items: center; gap: 12px;
+    }
+    .payment-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .payment-form { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 32px; position: relative; overflow: hidden; }
+    .payment-form::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--red-accent), transparent); }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .form-grid .form-group.full { grid-column: 1 / -1; }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } .form-grid .form-group.full { grid-column: 1; } }
+
+    .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-label { font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
+    .form-label .required { color: var(--red-accent); margin-left: 2px; }
+
+    .form-input, .form-select { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; color: var(--text-primary); font-size: 14px; font-family: 'Inter', sans-serif; transition: all 0.2s; outline: none; -webkit-appearance: none; }
+    .form-input::placeholder { color: var(--text-dim); }
+    .form-input:focus, .form-select:focus { border-color: var(--border-focus); background: #202020; box-shadow: 0 0 0 3px var(--red-glow); }
+    .form-input.error, .form-select.error { border-color: var(--red-accent); box-shadow: 0 0 0 3px var(--red-glow); }
+    .form-input.valid { border-color: rgba(45,255,127,0.4); box-shadow: 0 0 0 3px rgba(45,255,127,0.1); }
+
+    .select-wrapper { position: relative; }
+    .select-wrapper::after { content: ''; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 5px solid var(--text-dim); pointer-events: none; }
+    .form-select { cursor: pointer; padding-right: 36px; }
+    .form-select option { background: #1c1c1c; color: var(--text-primary); }
+
+    .form-error { font-family: var(--font-mono); font-size: 11px; color: var(--red-accent); letter-spacing: 0.5px; display: none; align-items: center; gap: 6px; }
+    .form-error.visible { display: flex; }
+
+    /* Payment method radio cards */
+    .payment-methods { display: flex; gap: 12px; flex-wrap: wrap; }
+    .payment-method-option { flex: 1; min-width: 120px; position: relative; }
+    .payment-method-option input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+    .payment-method-label { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 13px; font-weight: 600; color: var(--text-muted); user-select: none; }
+    .payment-method-label:hover { border-color: rgba(230,57,70,0.3); color: var(--text-primary); }
+    .payment-method-option input[type="radio"]:checked + .payment-method-label { border-color: var(--red-accent); color: var(--text-primary); background: rgba(230,57,70,0.08); box-shadow: 0 0 0 3px var(--red-glow); }
+    .method-icon { font-size: 20px; line-height: 1; }
+    .method-radio-dot { width: 16px; height: 16px; border: 2px solid var(--border); border-radius: 50%; margin-left: auto; flex-shrink: 0; transition: all 0.2s; }
+    .payment-method-option input[type="radio"]:checked + .payment-method-label .method-radio-dot { border-color: var(--red-accent); background: var(--red-accent); box-shadow: inset 0 0 0 3px var(--bg-input); }
+
+    .input-icon-wrapper { position: relative; }
+    .input-icon-wrapper .form-input { padding-right: 48px; }
+    .input-suffix { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); display: flex; gap: 4px; align-items: center; }
+    .card-chip { width: 20px; height: 14px; background: linear-gradient(135deg, #d4a96a, #8b6914); border-radius: 3px; display: inline-block; }
+    .cvv-hint { font-size: 11px; color: var(--text-dim); font-family: var(--font-mono); margin-top: 4px; }
+
+    .terms-row { display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
+    .terms-row:hover { border-color: rgba(255,255,255,0.12); }
+    .custom-checkbox { width: 18px; height: 18px; background: var(--bg-input); border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; margin-top: 1px; cursor: pointer; }
+    .custom-checkbox.checked { background: var(--red-accent); border-color: var(--red-accent); }
+    .custom-checkbox svg { opacity: 0; transition: opacity 0.15s; }
+    .custom-checkbox.checked svg { opacity: 1; }
+    .terms-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; cursor: pointer; }
+    .terms-text a { color: var(--red-accent); text-decoration: none; }
+    .terms-text a:hover { text-decoration: underline; }
+
+    .btn-submit-payment { width: 100%; padding: 16px; background: var(--red-accent); color: #fff; border: none; border-radius: 8px; font-family: var(--font-display); font-size: 16px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; transition: all 0.25s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .btn-submit-payment:hover { background: var(--red-dark); box-shadow: 0 0 32px var(--red-glow), 0 4px 16px rgba(0,0,0,0.4); transform: translateY(-1px); }
+    .btn-submit-payment:active { transform: translateY(0); }
+    .btn-submit-payment:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-submit-payment .btn-loader { display: none; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    .btn-submit-payment.loading .btn-loader { display: block; }
+    .btn-submit-payment.loading .btn-text { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .form-divider { grid-column: 1 / -1; height: 1px; background: var(--border); margin: 4px 0; }
+    .form-section-label { grid-column: 1 / -1; font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+
+    /* Success */
+    .payment-success { display: none; text-align: center; padding: 48px 24px; }
+    .payment-success.visible { display: block; }
+    .success-icon { width: 72px; height: 72px; background: rgba(45,255,127,0.1); border: 2px solid var(--green-accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 32px; }
+    .success-title { font-family: var(--font-display); font-size: 28px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--green-accent); margin-bottom: 12px; }
+    .success-sub { color: var(--text-muted); font-size: 14px; max-width: 400px; margin: 0 auto 32px; line-height: 1.6; }
+
+    /* Toast */
+    #toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 12px; z-index: 9999; }
+    .gsb-toast { display: flex; align-items: center; gap: 12px; padding: 14px 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; min-width: 280px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); animation: toastIn 0.3s ease; }
+    .gsb-toast.success { border-color: rgba(45,255,127,0.3); }
+    .gsb-toast.error { border-color: rgba(230,57,70,0.4); }
+    .gsb-toast-icon { font-size: 20px; }
+    .gsb-toast-title { font-weight: 600; font-size: 14px; }
+    .gsb-toast-msg { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+  </style>
+</head>
+<body>
+
+<div id="navbar-placeholder"></div>
+
+<main class="page-wrapper">
+
+  <!-- Page Hero -->
+  <section class="page-hero">
+    <div class="container page-hero-inner">
+      <div class="page-hero-label">// Your Order</div>
+      <h1 class="page-hero-title">Complete Your <span>Purchase</span></h1>
+      <p class="page-hero-sub">Secure checkout for digital keys and physical pre-orders.
+
+</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="purchase-layout">
+
+        <!-- ══ LEFT COLUMN ══ -->
+        <div>
+
+          <!-- 1. Cart Items (always rendered, shows empty notice if empty) -->
+          <h2 style="font-family:var(--font-display);font-size:20px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;color:var(--text-muted);">
+            Cart Items
+          </h2>
+          <div id="cart-items-area"></div>
+          <div id="cart-actions" style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;"></div>
+
+          <!-- 2. Payment Details (ALWAYS visible) -->
+          <div class="payment-section">
+            <div class="payment-section-title">Payment Details</div>
+
+            <div class="payment-form" id="payment-form-wrapper">
+
+              <!-- Success state -->
+              <div class="payment-success" id="payment-success">
+                <div class="success-icon">✓</div>
+                <div class="success-title">Payment Submitted!</div>
+                <p class="success-sub">Thank you! Your order is being processed. We'll email you the order details shortly.</p>
+                <a href="catalog.html" class="btn-primary" style="display:inline-flex;margin:0 auto;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg>
+                  Back to Catalog
+                </a>
+              </div>
+
+              <!-- Form content -->
+              <div id="payment-form-content">
+                <div class="form-grid">
+
+                  <div class="form-section-label">Personal Information</div>
+
+                  <div class="form-group full">
+                    <label class="form-label" for="fullName">Full Name <span class="required">*</span></label>
+                    <input class="form-input" type="text" id="fullName" placeholder="Enter your full name" autocomplete="name">
+                    <div class="form-error" id="err-fullName">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      Full name is required.
+                    </div>
+                  </div>
+
+                  <div class="form-group full">
+                    <label class="form-label" for="email">Email Address <span class="required">*</span></label>
+                    <input class="form-input" type="email" id="email" placeholder="you@example.com" autocomplete="email">
+                    <div class="form-error" id="err-email">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      Valid email address is required.
+                    </div>
+                  </div>
+
+                  <div class="form-divider"></div>
+                  <div class="form-section-label">Payment Method</div>
+
+                  <div class="form-group full">
+                    <div class="payment-methods">
+                      <label class="payment-method-option">
+                        <input type="radio" name="paymentMethod" value="credit" checked onchange="handleMethodChange(this)">
+                        <span class="payment-method-label">
+                          <span class="method-icon">💳</span> Credit Card
+                          <span class="method-radio-dot"></span>
+                        </span>
+                      </label>
+                      <label class="payment-method-option">
+                        <input type="radio" name="paymentMethod" value="debit" onchange="handleMethodChange(this)">
+                        <span class="payment-method-label">
+                          <span class="method-icon">🏦</span> Debit Card
+                          <span class="method-radio-dot"></span>
+                        </span>
+                      </label>
+                      <label class="payment-method-option">
+                        <input type="radio" name="paymentMethod" value="paypal" onchange="handleMethodChange(this)">
+                        <span class="payment-method-label">
+                          <span class="method-icon">🅿️</span> PayPal
+                          <span class="method-radio-dot"></span>
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="form-divider"></div>
+
+                  <!-- Card fields -->
+                  <div class="form-section-label" id="card-section-label">Credit Card Details</div>
+
+                  <div class="form-group full" id="field-cardNumber">
+                    <label class="form-label" for="cardNumber">Card Number <span class="required">*</span></label>
+                    <div class="input-icon-wrapper">
+                      <input class="form-input" type="text" id="cardNumber" placeholder="0000  0000  0000  0000" maxlength="19" inputmode="numeric" autocomplete="cc-number" oninput="formatCardNumber(this)">
+                      <div class="input-suffix"><span class="card-chip"></span></div>
+                    </div>
+                    <div class="form-error" id="err-cardNumber">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      Card number must be exactly 16 digits.
+                    </div>
+                  </div>
+
+                  <div class="form-group" id="field-expiryMonth">
+                    <label class="form-label" for="expiryMonth">Expiration Month <span class="required">*</span></label>
+                    <div class="select-wrapper">
+                      <select class="form-select" id="expiryMonth" autocomplete="cc-exp-month">
+                        <option value="">Month</option>
+                        <option value="01">01 — January</option>
+                        <option value="02">02 — February</option>
+                        <option value="03">03 — March</option>
+                        <option value="04">04 — April</option>
+                        <option value="05">05 — May</option>
+                        <option value="06">06 — June</option>
+                        <option value="07">07 — July</option>
+                        <option value="08">08 — August</option>
+                        <option value="09">09 — September</option>
+                        <option value="10">10 — October</option>
+                        <option value="11">11 — November</option>
+                        <option value="12">12 — December</option>
+                      </select>
+                    </div>
+                    <div class="form-error" id="err-expiry">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      Please select expiration month and year.
+                    </div>
+                  </div>
+
+                  <div class="form-group" id="field-expiryYear">
+                    <label class="form-label" for="expiryYear">Expiration Year <span class="required">*</span></label>
+                    <div class="select-wrapper">
+                      <select class="form-select" id="expiryYear" autocomplete="cc-exp-year">
+                        <option value="">Year</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-group" id="field-cvv">
+                    <label class="form-label" for="cvv">CVV <span class="required">*</span></label>
+                    <input class="form-input" type="text" id="cvv" placeholder="3-digit code" maxlength="4" inputmode="numeric" autocomplete="cc-csc" oninput="this.value=this.value.replace(/\D/g,'')">
+                    <div class="form-error" id="err-cvv">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      CVV must be exactly 3 digits.
+                    </div>
+                    <div class="cvv-hint">🔒 Found on the back of your card</div>
+                  </div>
+
+                  <!-- PayPal field (hidden by default) -->
+                  <div class="form-group full" id="field-paypalEmail" style="display:none;">
+                    <div class="form-section-label" style="margin-bottom:8px;">PayPal Details</div>
+                    <label class="form-label" for="paypalEmail">PayPal Email <span class="required">*</span></label>
+                    <input class="form-input" type="email" id="paypalEmail" placeholder="your-paypal@email.com">
+                    <div class="form-error" id="err-paypalEmail">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      Valid PayPal email is required.
+                    </div>
+                  </div>
+
+                  <div class="form-divider"></div>
+
+                  <!-- Terms -->
+                  <div class="form-group full">
+                    <div class="terms-row" onclick="toggleTerms()">
+                      <div class="custom-checkbox" id="terms-checkbox">
+                        <svg viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2.5" width="10" height="10"><polyline points="1.5 6 4.5 9 10.5 3"/></svg>
+                      </div>
+                      <span class="terms-text">
+                        I agree to the <a href="#" onclick="event.stopPropagation()">Terms &amp; Conditions</a> and <a href="#" onclick="event.stopPropagation()">Privacy Policy</a> of GameStoB.
+                      </span>
+                    </div>
+                    <div class="form-error" id="err-terms">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      You must agree to the Terms &amp; Conditions.
+                    </div>
+                  </div>
+
+                  <!-- Submit -->
+                  <div class="form-group full">
+                    <button class="btn-submit-payment" id="btn-submit" onclick="handleSubmitPayment()">
+                      <div class="btn-loader"></div>
+                      <span class="btn-text" style="display:flex;align-items:center;gap:10px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                        <span id="btn-submit-label">Submit Payment</span>
+                      </span>
+                    </button>
+                    <p style="text-align:center;font-size:11px;color:var(--text-dim);font-family:var(--font-mono);margin-top:12px;letter-spacing:1px;">
+                      🔒 Your payment information is encrypted and secure
+                    </p>
+                  </div>
+
+                </div>
+              </div><!-- /payment-form-content -->
+            </div><!-- /payment-form -->
+          </div><!-- /payment-section -->
+        </div>
+        <!-- ══ END LEFT COLUMN ══ -->
+
+        <!-- ══ RIGHT COLUMN: Order Summary ══ -->
+        <div class="cart-summary">
+          <h3>Order Summary</h3>
+          <div id="summary-rows">
+            <div class="summary-row"><span>Subtotal</span><span id="sum-subtotal">Rp 0</span></div>
+            <div class="summary-row"><span>Discount</span><span style="color:var(--green-accent)" id="sum-discount">-Rp 0</span></div>
+            <div class="summary-row"><span>Shipping</span><span style="color:var(--green-accent)">Free</span></div>
+            <div class="summary-row total"><span>Total</span><span id="sum-total">Rp 0</span></div>
+          </div>
+          <p class="secure-note">🔒 Fill in payment details on the left</p>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+            <p style="font-size:12px;color:var(--text-dim);font-family:var(--font-mono);letter-spacing:1px;margin-bottom:8px;">ITEMS IN CART:</p>
+            <div id="summary-items"></div>
+          </div>
+        </div>
+
+      </div><!-- /purchase-layout -->
+    </div>
+  </section>
+
+</main>
+
+<div id="footer-placeholder"></div>
+<div id="toast-container"></div>
+
+<script src="js/app.js"></script>
+<script>
+injectNavbar('Purchase');
+injectFooter();
+
+/* ── Toast helper ── */
+function showGsbToast(icon, title, msg, type) {
+  const tc = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'gsb-toast ' + (type || '');
+  t.innerHTML = `<div class="gsb-toast-icon">${icon}</div><div><div class="gsb-toast-title">${title}</div><div class="gsb-toast-msg">${msg}</div></div>`;
+  tc.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+/* ── Populate year dropdown ── */
+(function populateYears() {
+  const sel = document.getElementById('expiryYear');
+  const thisYear = new Date().getFullYear();
+  for (let y = thisYear; y <= thisYear + 10; y++) {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y;
+    sel.appendChild(opt);
+  }
+})();
+
+/* ── Render cart items area (independent of payment form) ── */
+function renderCartArea() {
+  const cart = getCart();
+  const area = document.getElementById('cart-items-area');
+  const actions = document.getElementById('cart-actions');
+
+  if (cart.length === 0) {
+    area.innerHTML = `
+      <div class="cart-empty-notice">
+        <span class="ei">🛒</span>
+        <span>Your cart is empty. <a href="catalog.html" style="color:var(--red-accent);text-decoration:none;">Browse catalog</a> to add games.</span>
+      </div>`;
+    actions.innerHTML = '';
+  } else {
+    area.innerHTML = cart.map(item => {
+      const qty = item.quantity || 1;
+      const subtotal = item.price * qty;
+      return `
+      <div class="cart-item" id="cart-item-${item.id}">
+        <img class="cart-item-img" src="${item.img}" alt="${item.title}">
+        <div class="cart-item-info">
+          <div class="cart-item-type">${item.type === 'dlc' ? '🎮 DLC / Add-on' : '🕹️ Full Game'}</div>
+          <div class="cart-item-name">${item.title}</div>
+          <div class="cart-item-platform">Platform: ${item.platform}</div>
+        </div>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="handleQtyChange(${item.id}, -1)" title="Kurang">−</button>
+          <span class="qty-value">${qty}</span>
+          <button class="qty-btn" onclick="handleQtyChange(${item.id}, 1)" title="Tambah">+</button>
+        </div>
+        <div class="cart-item-price-wrap">
+          <div class="cart-item-price">${formatPrice(subtotal)}</div>
+          ${qty > 1 ? `<div class="cart-item-price-unit">${formatPrice(item.price)} / item</div>` : ''}
+        </div>
+        <button class="cart-item-remove" onclick="handleRemove(${item.id})" title="Remove">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+      </div>`;
+    }).join('');
+
+    actions.innerHTML = `
+      <a href="catalog.html" class="btn-secondary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="15 18 9 12 15 6"/></svg>
+        Continue Shopping
+      </a>
+      <button class="btn-secondary" onclick="handleClearCart()" style="border-color:var(--red-accent);color:var(--red-accent);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        Clear Cart
+      </button>`;
+  }
+
+  renderSummary(cart);
+  updateSubmitLabel(cart);
+}
+
+/* ── Render order summary sidebar ── */
+function renderSummary(cart) {
+  const total = cart.reduce((s, i) => s + i.price * (i.quantity || 1), 0);
+  document.getElementById('sum-subtotal').textContent = formatPrice(total);
+  document.getElementById('sum-discount').textContent = '-' + formatPrice(0);
+  document.getElementById('sum-total').textContent = formatPrice(total);
+
+  const si = document.getElementById('summary-items');
+  if (cart.length === 0) {
+    si.innerHTML = `<p style="font-size:12px;color:var(--text-dim);font-family:var(--font-mono);">No items yet.</p>`;
+  } else {
+    si.innerHTML = cart.map(item => {
+      const qty = item.quantity || 1;
+      return `
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;">
+        <span style="color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">
+          ${qty > 1 ? `<span style="color:var(--red-accent);font-family:var(--font-mono);margin-right:4px;">${qty}×</span>` : ''}${item.title}
+        </span>
+        <span style="color:var(--brown-light);white-space:nowrap;margin-left:8px;">${formatPrice(item.price * qty)}</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+/* ── Update submit button label with total ── */
+function updateSubmitLabel(cart) {
+  const lbl = document.getElementById('btn-submit-label');
+  if (!lbl) return;
+  const total = cart.reduce((s, i) => s + i.price * (i.quantity || 1), 0);
+  lbl.textContent = total > 0 ? `Submit Payment — ${formatPrice(total)}` : 'Submit Payment';
+}
+
+/* ── Card number formatter ── */
+function formatCardNumber(input) {
+  let v = input.value.replace(/\D/g, '').substring(0, 16);
+  input.value = v.replace(/(.{4})/g, '$1  ').trim();
+}
+
+/* ── Payment method toggle ── */
+function handleMethodChange(radio) {
+  const cardIds = ['card-section-label','field-cardNumber','field-expiryMonth','field-expiryYear','field-cvv'];
+  const isPaypal = radio.value === 'paypal';
+
+  cardIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isPaypal ? 'none' : '';
+  });
+
+  const pp = document.getElementById('field-paypalEmail');
+  if (pp) pp.style.display = isPaypal ? 'flex' : 'none';
+
+  const lbl = document.getElementById('card-section-label');
+  if (lbl && !isPaypal) lbl.textContent = radio.value === 'debit' ? 'Debit Card Details' : 'Credit Card Details';
+}
+
+/* ── Terms checkbox ── */
+let termsChecked = false;
+function toggleTerms() {
+  termsChecked = !termsChecked;
+  document.getElementById('terms-checkbox').classList.toggle('checked', termsChecked);
+}
+
+/* ── Validation helpers ── */
+function showErr(fieldId, errId, show) {
+  const f = document.getElementById(fieldId);
+  const e = document.getElementById(errId);
+  if (f) { f.classList.toggle('error', show); if (show) f.classList.remove('valid'); }
+  if (e) e.classList.toggle('visible', show);
+}
+function markValid(id) {
+  const f = document.getElementById(id);
+  if (f) { f.classList.remove('error'); f.classList.add('valid'); }
+}
+
+/* ── Validate form ── */
+function validateForm() {
+  let ok = true;
+  const method = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'credit';
+
+  const name = document.getElementById('fullName')?.value.trim();
+  if (!name) { showErr('fullName','err-fullName',true); ok=false; } else { showErr('fullName','err-fullName',false); markValid('fullName'); }
+
+  const email = document.getElementById('email')?.value.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('email','err-email',true); ok=false; } else { showErr('email','err-email',false); markValid('email'); }
+
+  if (method === 'paypal') {
+    const pe = document.getElementById('paypalEmail')?.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(pe)) { showErr('paypalEmail','err-paypalEmail',true); ok=false; } else { showErr('paypalEmail','err-paypalEmail',false); markValid('paypalEmail'); }
+  } else {
+    const cn = document.getElementById('cardNumber')?.value.replace(/\D/g,'');
+    if (!cn || cn.length !== 16) { showErr('cardNumber','err-cardNumber',true); ok=false; } else { showErr('cardNumber','err-cardNumber',false); markValid('cardNumber'); }
+
+    const em = document.getElementById('expiryMonth')?.value;
+    const ey = document.getElementById('expiryYear')?.value;
+    if (!em || !ey) { showErr('expiryMonth','err-expiry',true); ok=false; } else { showErr('expiryMonth','err-expiry',false); markValid('expiryMonth'); }
+
+    const cvv = document.getElementById('cvv')?.value;
+    if (!cvv || cvv.length < 3) { showErr('cvv','err-cvv',true); ok=false; } else { showErr('cvv','err-cvv',false); markValid('cvv'); }
+  }
+
+  const termsErr = document.getElementById('err-terms');
+  if (!termsChecked) { if (termsErr) termsErr.classList.add('visible'); ok=false; }
+  else { if (termsErr) termsErr.classList.remove('visible'); }
+
+  return ok;
+}
+
+/* ── Submit ── */
+function handleSubmitPayment() {
+  if (!validateForm()) return;
+  const btn = document.getElementById('btn-submit');
+  btn.classList.add('loading'); btn.disabled = true;
+
+  setTimeout(() => {
+    btn.classList.remove('loading'); btn.disabled = false;
+    document.getElementById('payment-form-content').style.display = 'none';
+    document.getElementById('payment-success').classList.add('visible');
+    localStorage.removeItem('gsb_cart');
+    if (typeof updateCartBadge === 'function') updateCartBadge();
+    renderCartArea();
+    showGsbToast('✅', 'Payment Submitted!', 'Your order is being processed.', 'success');
+  }, 2000);
+}
+
+/* ── Cart action handlers ── */
+function handleRemove(id) {
+  removeFromCart(id);
+  if (typeof showToast === 'function') showToast('🗑️', 'Removed', 'Item removed from cart.');
+  renderCartArea();
+  if (typeof updateCartBadge === 'function') updateCartBadge();
+}
+
+function handleClearCart() {
+  localStorage.removeItem('gsb_cart');
+  if (typeof showToast === 'function') showToast('🗑️', 'Cart Cleared', 'All items removed.');
+  renderCartArea();
+  if (typeof updateCartBadge === 'function') updateCartBadge();
+}
+
+function handleQtyChange(id, delta) {
+  const cart = getCart();
+  const item = cart.find(c => c.id === id);
+  if (!item) return;
+  const newQty = (item.quantity || 1) + delta;
+  if (newQty <= 0) {
+    handleRemove(id);
+    return;
+  }
+  item.quantity = newQty;
+  setCart(cart);
+  renderCartArea();
+  if (typeof updateCartBadge === 'function') updateCartBadge();
+}
+
+/* ── Init ── */
+renderCartArea();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,35 @@
+Rows: 20640 raw -> 19475 after cleaning
+
+Gelman-Rubin R-hat (values close to 1.00 indicate convergence):
+  beta0 beta[1] beta[2] beta[3] beta[4] beta[5] beta[6]   sigma 
+  1.000   1.000   1.004   1.001   1.003   1.001   1.000   1.000 
+
+Effective sample sizes:
+  beta0 beta[1] beta[2] beta[3] beta[4] beta[5] beta[6]   sigma 
+  14837   11152     943    1324     728    3943    9916   15000 
+
+Posterior coefficients ($k per +1 SD of the predictor):
+                predictor   mean   sd  lower  upper credible_nonzero
+       housing_median_age  21.22 0.53  20.16  22.26             TRUE
+              total_rooms -33.64 1.45 -36.45 -30.80             TRUE
+               population -35.60 1.23 -37.98 -33.20             TRUE
+               households  75.73 1.62  72.57  78.96             TRUE
+            median_income  72.46 0.55  71.37  73.55             TRUE
+ population_per_household  -0.58 0.50  -1.56   0.42            FALSE
+
+Residual sigma: $68.3k
+
+OLS coefficients for comparison ($k per SD):
+      Xhousing_median_age              Xtotal_rooms               Xpopulation 
+                    21.22                    -33.64                    -35.60 
+              Xhouseholds            Xmedian_income Xpopulation_per_household 
+                    75.71                     72.46                     -0.58 
+
+Hypothetical district (age 30, 2000 rooms, 800 people, 300 households, income 4.5):
+  Expected median value : $223k  (95% CrI for the mean: $222k - $224k)
+  Predictive interval   : $89k - $355k (95%)
+
+Bayesian R^2 (posterior-mean fit): 0.511
+Mean deviance:  40419 
+penalty 8.171 
+Penalized deviance: 40427 

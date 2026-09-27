@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting…</title>
+  <meta name="robots" content="noindex">
+  <script>
+    // Old case-study URLs (project.html?id=…) now open the project modal on the home page.
+    var id = new URLSearchParams(location.search).get("id");
+    location.replace("index.html" + (id ? "#project=" + encodeURIComponent(id) : "#projects"));
+  </script>
+  <noscript><meta http-equiv="refresh" content="0; url=index.html#projects"></noscript>
+</head>
+<body><p><a href="index.html#projects">Go to projects</a></p></body>
+</html>
