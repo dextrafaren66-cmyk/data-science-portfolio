@@ -139,6 +139,7 @@ const PORTFOLIO_DATA = {
         challenges: [
           "The 'Good' class is small and overlaps with 'Standard', which caps its F1 at about 0.63.",
           "Keeping local, SageMaker and EC2 training identical meant sharing one cleaning specification across three entry points.",
+          "One customer appears in several months, so a random row split puts most test customers in training too (79% of test rows). Split by customer, macro-F1 drops to about 0.665, the number I'd quote for brand-new customers.",
         ],
         future: [
           "Use each customer's monthly history as sequence features, since the data has one row per customer per month.",
@@ -212,8 +213,10 @@ const PORTFOLIO_DATA = {
         challenges: [
           "The full 5,014-image dataset was too slow to train on our laptops, so we used a fixed ~40% subset.",
           "Rare classes (large bus, bicycle, large truck) have fewer than 12 test images each, so their scores are noisy.",
+          "Roboflow splits per image, so about two thirds of the validation and test images are frames from videos that also have frames in training. The YOLOv8s vs YOLOv8n comparison stays fair, but the absolute scores are probably optimistic for a new camera.",
         ],
         future: [
+          "Re-split the data by video, so no test frame comes from a video the model trained on.",
           "A two-stage pipeline: detect the plate first, then run OCR to actually read the number.",
           "Higher input resolution or SAHI tiling for small objects.",
           "More examples of the rare classes.",
@@ -369,59 +372,61 @@ const PORTFOLIO_DATA = {
     {
       id: "heart-disease-prediction",
       title: "Heart Disease Prediction",
-      subtitle: "Catching a data leak before modelling",
+      subtitle: "Catching two data problems before modelling",
       category: "Machine Learning · Healthcare",
       folder: "heart-disease-prediction",
       demo: "",
       description:
-        "Predicts heart disease from 13 clinical measurements, after I found that 70% of this popular dataset is duplicate rows.",
+        "Predicts heart disease from 13 clinical measurements, after I found that 70% of this popular dataset is duplicate rows and that its label is flipped.",
       problem:
         "Missing a sick patient is costly, so recall matters most. But duplicate records can make any model look perfect.",
       methodology:
-        "Duplicate audit and leak demonstration, EDA, a stratified split, 4 classifiers, GridSearch tuning, and recall-focused evaluation with ROC curves.",
-      metric: { value: "0.85", label: "recall on the disease class (ROC-AUC 0.87)" },
+        "Duplicate audit and leak demonstration, a label check against clinical knowledge, a stratified split, 4 classifiers compared with repeated cross-validation, and recall-focused evaluation.",
+      metric: { value: "0.89", label: "ROC-AUC on unseen patients (recall 0.75 on the disease class)" },
       tech: ["Python", "Scikit-learn", "Pandas", "Seaborn"],
       image: "assets/img/heart-roc.jpg",
       imageAlt: "ROC curves of the compared models",
       chart: {
-        title: "Test accuracy",
-        note: "The first bar is inflated by duplicate rows",
+        title: "Accuracy",
+        note: "First bar: test set with the duplicates left in. The rest: repeated 5-fold CV on unique patients",
         decimals: 3,
         items: [
           { label: "Random Forest (with duplicates)", value: 1.0 },
-          { label: "SVM", value: 0.770 },
-          { label: "Random Forest (tuned)", value: 0.787 },
-          { label: "Logistic Regression", value: 0.803, highlight: true },
+          { label: "K-Nearest Neighbors", value: 0.814 },
+          { label: "SVM", value: 0.822 },
+          { label: "Random Forest (tuned)", value: 0.828 },
+          { label: "Logistic Regression", value: 0.831, highlight: true },
         ],
       },
       sections: {
         overview:
-          "A classification study on the UCI Heart Disease data. My main contribution here is methodological: catching a data quality problem that makes a lot of published results on this dataset unreliable. If you've seen notebooks scoring 100% on it, this is why.",
+          "A classification study on the UCI Heart Disease data. My main contribution here is methodological: catching two data quality problems that make a lot of published results on this dataset unreliable, duplicate rows and a flipped label. If you've seen notebooks scoring 100% on it, the duplicates are why.",
         problem:
           "Doctors need a quick screening aid that rarely misses patients with heart disease. That only works if the model is trained and tested on data we can trust.",
         dataset:
-          "UCI Heart Disease (Cleveland), the 1,025-row Kaggle version. Only 302 rows are unique patients; the other 723 are exact duplicates.",
+          "UCI Heart Disease (Cleveland), the 1,025-row Kaggle version. Only 302 rows are unique patients; the other 723 are exact duplicates. And the label is stored the other way round: 1 means healthy.",
         preprocessing: [
           "Removed the 723 duplicate rows before splitting. Otherwise the same patient lands in both train and test, which is basically handing the model the answer key.",
+          "Flipped the label after checking it against clinical knowledge. The group marked 1 is younger, has less exercise angina, less ST depression, fewer affected vessels and a higher max heart rate, and its 164 patients match the healthy count in the original UCI data. Without the flip, the 'disease recall' would really be recall on healthy patients.",
           "Stratified 80/20 split, with scaling fitted on training data only.",
         ],
         eda: [
-          "Chest pain type, max heart rate and ST slope correlate positively with disease.",
-          "Exercise-induced angina, ST depression and number of vessels correlate negatively.",
+          "Exercise-induced angina, ST depression and the number of major vessels correlate positively with disease.",
+          "Max heart rate correlates negatively, as it should: a heart that can't reach a high rate under stress is a warning sign. So does chest pain type, because code 0 in this version is asymptomatic pain, the type most common in sick patients.",
         ],
         methodology:
-          "Compared Logistic Regression, Random Forest, SVM and KNN, then tuned the Random Forest with 5-fold GridSearch over 108 combinations.",
+          "Compared Logistic Regression, Random Forest, SVM and KNN, then tuned the Random Forest with 5-fold GridSearch over 108 combinations. The final model is chosen with repeated stratified 5-fold CV (10 repeats) on the training patients, because one 61-patient test set is too noisy to pick a winner.",
         model:
-          "Logistic Regression as the final model. The simplest model generalised best, and it's also the easiest to explain to a clinician, which in healthcare matters more than a fraction of a point.",
+          "Logistic Regression as the final model. In repeated CV every model sits within about one standard deviation of the others, and Logistic Regression has the highest mean accuracy (0.83). When models tie, I keep the one a clinician can read, which in healthcare matters more than a fraction of a point.",
         metrics: ["**Recall** on the disease class as the main metric", "Accuracy, precision, F1 and ROC-AUC"],
         results:
-          "With the duplicates left in, 202 of the 205 test rows also appear in training, and a Random Forest scores a misleading 100%. On unique patients, Logistic Regression reaches accuracy 0.80, recall 0.85, F1 0.82 and ROC-AUC 0.87.",
+          "With the duplicates left in, 202 of the 205 test rows also appear in training, and a Random Forest scores a misleading 100%. On unique patients with the label corrected, Logistic Regression reaches accuracy 0.79 and ROC-AUC 0.89 on the test set, and on the disease class recall 0.75 (21 of 28 sick patients), precision 0.78 and F1 0.76.",
         insights: [
-          "Auditing the data changed the conclusion more than any model choice did.",
-          "On a small dataset (302 patients), simple linear models often beat ensembles.",
+          "Auditing the data changed the conclusion more than any model choice did, twice: once for the duplicates and once for the label.",
+          "On a small dataset (302 patients) the models tie, so a single test-set ranking is noise: the SVM beats Logistic Regression there by two patients, while repeated CV puts them level.",
         ],
-        challenges: ["A 61-patient test set makes single-split scores noisy. Cross-validation (0.85 for the tuned forest) gives a steadier picture."],
-        future: ["Repeated stratified CV", "Probability calibration", "Threshold tuning to push recall higher"],
+        challenges: ["A 61-patient test set makes single-split scores noisy (one patient is 1.6 points of accuracy), so the model is chosen with repeated cross-validation instead."],
+        future: ["A lower threshold, chosen by cross-validation, to catch more than 21 of the 28 sick patients", "Probability calibration, because a clinician will read the score as a probability"],
       },
       figures: [
         { src: "assets/img/heart-roc.jpg", caption: "ROC curves for all models." },
@@ -465,7 +470,7 @@ const PORTFOLIO_DATA = {
         problem: "Most calls don't convert. So which clients are worth calling, and what makes a call succeed?",
         dataset: "An 8,237-row sample of the UCI Bank Marketing dataset (Portuguese bank, Moro et al., 2014).",
         preprocessing: [
-          "Converted 'unknown' categories to missing values and removed them.",
+          "Converted 'unknown' categories to missing values and removed them, which leaves 6,039 of the 8,237 rows. Next time I'd keep 'unknown' as its own category instead of dropping 27% of the data.",
           "Treated the *pdays* = 999 sentinel as 'never contacted', not as a real number of days.",
           "Grouped education levels and removed extreme call durations.",
           "Engineered age group, contact recency and total contact attempts.",
@@ -476,9 +481,9 @@ const PORTFOLIO_DATA = {
         ],
         methodology: "Correlation and chi-squared tests, subscription rates per segment and interactive visualisation, followed by business recommendations.",
         results:
-          "Previously contacted clients subscribe at 65–70%, versus about 11% for cold contacts. Successful calls also last about twice as long (518 s vs 220 s), but call length is only known after the call.",
+          "Previously contacted clients subscribe at 65–70%, versus about 11% for cold contacts, but there are only 261 warm leads against 5,778 cold contacts. Successful calls also last about twice as long (518 s vs 220 s), but call length is only known after the call.",
         insights: [
-          "**Warm leads** are by far the most valuable segment. If I were on the marketing team, that's where the budget would go first.",
+          "**Warm leads** are by far the most valuable segment, but there are only 261 of them. If I were on the marketing team, every one would get a follow-up call first, and the rest of the budget would go into targeting cold contacts better.",
           "The 30–50 age group is the largest but the least responsive. I'd research why before writing them off.",
           "Call duration is a correlation, not a lever: you can't use it to decide who to call.",
         ],

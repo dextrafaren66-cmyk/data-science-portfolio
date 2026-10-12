@@ -15,6 +15,7 @@ A detector for **13 classes of Indonesian road users**, including **license plat
 - Cars and motorbikes are detected best (mAP50 ≈ 0.95 and 0.93), which makes sense since they're also the most common classes.
 - **License plates are the hardest class** (mAP50 0.73, mAP50-95 0.40). A box that's a few pixels off is a tiny miss on a car but a big miss on a plate.
 - Training and validation losses fall together, so there's no sign of overfitting.
+- **The absolute scores are probably optimistic for a camera the model has never seen.** Roboflow splits the data per image, so 139 of the 212 test images (66%) are frames from videos that also have frames in training, and 11 share their original file with a training image. Frames a fraction of a second apart are near-duplicates, which makes part of the test set familiar. The validation set has the same overlap (281 of 440). Both models face the same test set, so the YOLOv8s vs YOLOv8n comparison is still fair; it's the absolute numbers that are inflated. *check_video_overlap.py* reproduces these counts.
 
 ![Training curves](images/training_curves.png)
 
@@ -51,6 +52,9 @@ python prepare_dataset.py "Deteksi Kendaraan.v5-dataset1.yolov8.zip"
 # 2. Train + evaluate on the test set
 python train.py                      # YOLOv8s (main model)
 python train.py --model yolov8n.pt   # optional: lighter comparison model
+
+# 3. Optional: count validation and test images that come from training videos
+python check_video_overlap.py
 ```
 
 **About the data subset.** The Roboflow export has 5,014 images, but training used about 40% of it (1,347 / 440 / 212) so it would fit on a 6 GB laptop GPU. The *prepare_dataset.py* script rebuilds that setup: the **test set is the exact 212 images** behind the reported results (listed in *test_subset.txt*), while train and validation are re-sampled with a fixed seed. So a retrained model will land close to the numbers above, but not exactly on them. Add `--full` to train on all 5,014 images instead.
@@ -71,6 +75,7 @@ Then split the .onnx file into parts smaller than 20 MB, replace the files in *d
 
 ## Next steps
 
+- Re-split by video, so no validation or test frame comes from a video the model trained on. It's the only way to get a score that holds for a new camera.
 - A two-stage pipeline: detect the plate first, then run OCR to actually read the number.
 - A higher input resolution (e.g. 960) or SAHI tiling, to improve recall on small objects.
 - More data for the rare classes. Large buses, bicycles and large trucks have fewer than 12 test images each, so their scores are noisy.

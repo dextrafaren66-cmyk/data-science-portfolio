@@ -9,7 +9,7 @@ This project predicts whether a bank customer's credit score is **Good**, **Stan
 - **Messy data, cleaned properly.** The raw data has numbers stored as text ("39_"), junk placeholders (_______, !@9#%8), ages like 8,466, and durations written as "22 Years and 1 Months". Most of my effort went here, because a model trained on that would just learn the noise.
 - **Leak-free preprocessing.** Imputation, scaling and one-hot encoding all live inside a single scikit-learn *Pipeline*. Think of it as a recipe card that travels with the dish: training and inference follow the exact same steps, so they can't drift apart.
 - **Experiment tracking.** Every model run logs its parameters and test metrics to MLflow, so I can compare runs instead of trusting my memory.
-- **Approval gate.** The best model is promoted only if its macro-F1 clears a threshold. It's a small safety net against shipping a model that got worse.
+- **Approval gate.** The best model is promoted only if its macro-F1 clears a threshold. If it doesn't, the pipeline stops before promotion, so the app keeps the model it already has. It's a small safety net against shipping a model that got worse.
 - **Cloud deployment.** S3 for data and models, SageMaker for managed training, EC2 for the app.
 
 ## Results
@@ -27,6 +27,17 @@ The strongest predictors are outstanding debt, interest rate, days past due and 
 
 <img src="images/feature_importance.png" width="600">
 
+### One caveat: the same customer can be in train and test
+
+The data has one row per customer per month, and the split above is random per row. So 79% of the test rows belong to a customer whose other months are in the training set, and 97% of those customers keep the same annual income and occupation in every month. Part of the score is the model recognising customers rather than judging risk. Split by customer instead, the same Random Forest drops to a macro-F1 of about 0.665:
+
+| Split | Accuracy | Macro-F1 | Test rows whose customer is also in train |
+|---|---|---|---|
+| Random rows (the pipeline above) | 0.728 | 0.705 | 78.7% |
+| By *Customer_ID* (3 random seeds) | 0.691–0.695 | 0.663–0.667 | 0% |
+
+That second row is the number I'd quote for brand-new customers, which is who a credit model is really for. The drop is small, though, and that's reassuring: the model did learn real risk signals, not just customers it had already seen. *pipeline/group_split_check.py* reproduces the table with the production cleaning, preprocessing and Random Forest.
+
 ## Architecture
 
 ```mermaid
@@ -37,6 +48,7 @@ flowchart LR
     C --> D[ModelEvaluator<br/>macro-F1]
     D --> E{F1 > 0.5?}
     E -->|approved| F[credit_score_pipeline.pkl]
+    E -->|rejected| X[stop, keep the deployed model]
     F --> G[Streamlit app]
     subgraph AWS
       S3[(S3 bucket)] --> SM[SageMaker training job]
@@ -61,7 +73,8 @@ credit-score-mlops/
 │   ├── data_ingestion.py   # cleaning
 │   ├── train_pipeline.py   # training + MLflow logging
 │   ├── evaluate_pipeline.py
-│   └── run_pipeline.py     # orchestrator (entry point)
+│   ├── run_pipeline.py     # orchestrator (entry point)
+│   └── group_split_check.py  # same model, evaluated with a split by customer
 ├── aws/                    # S3 helper, cloud pipeline, EC2 setup, IAM policy
 └── sagemaker/              # SageMaker training script + job launcher
 ```
@@ -79,6 +92,9 @@ python inference.py
 
 # 3. Launch the app
 streamlit run app.py
+
+# Optional: evaluate the same model with a split by customer
+python pipeline/group_split_check.py
 
 # Optional: browse experiment runs
 mlflow ui --backend-store-uri sqlite:///pipeline/mlflow.db

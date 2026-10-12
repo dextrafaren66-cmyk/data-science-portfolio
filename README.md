@@ -2,7 +2,7 @@
 
 I'm a Data Science undergraduate at BINUS University in Jakarta. These projects cover the whole workflow: cleaning messy data, statistical analysis, classical ML, deep learning, Bayesian modelling, and deploying models to the cloud.
 
-If there's one thread running through all of them, it's this: **a score only means something next to a baseline and on clean data**. That's why you'll find a duplicate-row leak exposed in one project, naive forecasts benchmarked in another, and a prior-scale mistake owned up to in a third. I'd rather show a modest number I can defend than a perfect one I can't.
+If there's one thread running through all of them, it's this: **a score only means something next to a baseline and on clean data**. That's why you'll find a duplicate-row leak and a flipped label exposed in one project, naive forecasts benchmarked in another, and a prior-scale mistake owned up to in a third. I'd rather show a modest number I can defend than a perfect one I can't.
 
 🌐 **[Portfolio website](https://dextrafaren66-cmyk.github.io/data-science-portfolio/)** · 📫 **[LinkedIn](https://www.linkedin.com/in/dextra-faren)** · **[Email](mailto:dextrafaren66@gmail.com)**
 
@@ -14,7 +14,7 @@ If there's one thread running through all of them, it's this: **a score only mea
 | **[Vehicle & License Plate Detection](vehicle-detection-yolov8/)** | Transfer learning for object detection on 13 Indonesian vehicle classes, a model size trade-off study, and a [live demo that runs in the browser](https://dextrafaren66-cmyk.github.io/data-science-portfolio/demo/) | mAP50 **0.81** (YOLOv8s), with a nano variant that's 2× faster | PyTorch · Ultralytics YOLOv8 · ONNX |
 | **[Weather Forecasting with LSTMs](weather-forecasting-lstm/)** | Time series EDA, sliding windows, stacked LSTM vs BiLSTM, and **benchmarking against naive forecasts** | Next-hour MAE **0.48 °C**, 35% better than persistence | PyTorch · pandas |
 | **[Bayesian House Price Regression](bayesian-house-prices/)** | MCMC with JAGS, convergence diagnostics, credible and predictive intervals, and fixing a prior scale mistake | Income effect **+$72k per SD**, R-hat ≤ 1.004 | R · JAGS · ggplot2 |
-| **[Heart Disease Prediction](heart-disease-prediction/)** | Catching a 70% duplicate-row leak that inflates accuracy to 100%, then an honest model comparison | Recall **0.85**, ROC-AUC **0.87** | Python · scikit-learn |
+| **[Heart Disease Prediction](heart-disease-prediction/)** | Catching a 70% duplicate-row leak that inflates accuracy to 100% and a flipped label, then choosing the model with repeated cross-validation | ROC-AUC **0.89**, recall **0.75** on sick patients | Python · scikit-learn |
 | **[Bank Telemarketing EDA](bank-marketing-eda-r/)** | Data quality assessment, feature engineering, interactive charts and business recommendations | Warm leads convert **~6×** better | R · dplyr · plotly · R Markdown |
 
 ## Other projects

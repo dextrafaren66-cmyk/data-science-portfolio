@@ -184,15 +184,19 @@ def main():
         target_names=target_encoder.classes_
     ))
 
-    # ---- 5. Approval check ----
+    # ---- 5. Approval check (same rule as the local pipeline) ----
     THRESHOLD = 0.5
-    status = "APPROVED" if best_score >= THRESHOLD else "REJECTED"
+    approved = best_score > THRESHOLD
+    status = "APPROVED" if approved else "REJECTED"
     print("=" * 60)
     print(f"Best model : {best_name}")
     print(f"Best F1    : {best_score:.4f}")
     print(f"Threshold  : {THRESHOLD}")
     print(f"STATUS     : {status} for deployment")
     print("=" * 60)
+    if not approved:
+        # Stop before saving: the job fails, nothing reaches S3, and the app keeps its current model
+        raise SystemExit("Training job stopped: the best model did not pass the approval gate")
 
     # ---- 6. Save artifacts to /opt/ml/model (SageMaker uploads them to S3) ----
     os.makedirs(args.model_dir, exist_ok=True)

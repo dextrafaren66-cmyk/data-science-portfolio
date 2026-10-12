@@ -1,7 +1,10 @@
 """
 End-to-end training pipeline:
 
-    ingest & clean -> split & encode -> train (MLflow) -> evaluate -> promote -> approval gate
+    ingest & clean -> split & encode -> train (MLflow) -> evaluate -> approval gate -> promote
+
+A model that fails the approval gate stops the pipeline before promotion, so the
+model the app already uses stays in place.
 
 Usage (from the project root):
     python pipeline/run_pipeline.py
@@ -72,15 +75,18 @@ class CreditScorePipeline:
         print(f"\n  Best model promoted: {best_path.name} -> {deploy_path.name}")
 
     def _approval_check(self):
+        """Print the result and return True if the best model clears the macro-F1 threshold."""
+        approved = self.best_score > self.F1_THRESHOLD
         print("\n" + "=" * 50)
         print("PIPELINE RESULT")
         print("=" * 50)
         print(f"  Best model    : {self.best_name}")
         print(f"  Best F1 macro : {self.best_score:.4f}")
         print(f"  Threshold     : {self.F1_THRESHOLD}")
-        status = "APPROVED for deployment" if self.best_score > self.F1_THRESHOLD else "REJECTED (below threshold)"
+        status = "APPROVED for deployment" if approved else "REJECTED (below threshold)"
         print(f"  STATUS        : {status}")
         print("")
+        return approved
 
     def run(self):
         print("\n" + "=" * 50)
@@ -96,8 +102,10 @@ class CreditScorePipeline:
             X_test, y_test, run_ids, trained_pipelines
         )
 
+        # Check first, promote second: a rejected model must never replace the one the app uses
+        if not self._approval_check():
+            raise SystemExit("Pipeline stopped: the best model did not pass the approval gate")
         self._promote_best_model()
-        self._approval_check()
 
 
 if __name__ == "__main__":
